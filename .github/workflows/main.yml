@@ -1,4 +1,4 @@
-name: Build iOS Dylib (Linux Fast Runner)
+name: Build iOS Dylib
 on:
   push:
     branches: [ "main", "master" ]
@@ -11,21 +11,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Clang & Dependencies
+      - name: Install Compiler Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y clang llvm lld curl tar xz-utils libtinfo5
 
-      - name: Download iOS SDK & ImGui
+      - name: Setup SDK and Dependencies
         run: |
           chmod +x ./get_imgui.sh
           ./get_imgui.sh
-          # Download official iOS 16/17 Patched SDK
           mkdir -p sdk
           curl -L -o iPhoneOS.sdk.tar.xz https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz
           tar -xf iPhoneOS.sdk.tar.xz -C sdk --strip-components=1
 
-      - name: Cross-Compile iOS Dylib
+      - name: Compile Dylib
         run: |
           mkdir -p output
           clang++ -target arm64-apple-ios15.0 \
