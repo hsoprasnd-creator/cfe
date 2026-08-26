@@ -1,31 +1,36 @@
-name: Build iOS Dylib
+name: Build iOS Dylib (Linux Fast Runner)
 on:
   push:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download ImGui Dependencies
+      - name: Set up Clang & Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm lld curl tar xz-utils libtinfo5
+
+      - name: Download iOS SDK & ImGui
         run: |
           chmod +x ./get_imgui.sh
           ./get_imgui.sh
+          # Download official iOS 16/17 Patched SDK
+          mkdir -p sdk
+          curl -L -o iPhoneOS.sdk.tar.xz https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz
+          tar -xf iPhoneOS.sdk.tar.xz -C sdk --strip-components=1
 
-      - name: Compile Dylib via Native Apple Clang
+      - name: Cross-Compile iOS Dylib
         run: |
           mkdir -p output
-          xcrun -sdk iphoneos clang++ -arch arm64 -shared \
-            -std=c++17 -fobjc-arc -O2 \
-            -miphoneos-version-min=15.0 \
+          clang++ -target arm64-apple-ios15.0 \
+            -isysroot ./sdk \
+            -shared -std=c++17 -fobjc-arc -O2 \
             -framework UIKit -framework Foundation -framework CoreGraphics -framework Metal -framework MetalKit -framework QuartzCore \
             -Wl,-headerpad_max_install_names \
             -install_name @executable_path/Frameworks/ImGuiOverlay.dylib \
