@@ -135,7 +135,7 @@ static void SetupOverlayWindow() {
 }
 
 static void* SafeInitThread(void*) {
-    // Game engine aur splash screens load hone ke liye safe delay
+    // Game render engine aur splash screen fully load hone ke liye delay
     sleep(6);
     SetupOverlayWindow();
     return NULL;
